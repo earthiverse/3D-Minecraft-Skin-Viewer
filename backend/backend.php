@@ -71,9 +71,9 @@ function minecraft_skin_download($user) {
    
    minecraft_skin_3d_part($original,$user,8,0,8,8,256,"head_top", TRUE, TRUE);
    minecraft_skin_3d_part($original,$user,16,0,8,8,256,"head_bottom", TRUE, TRUE);
-   minecraft_skin_3d_part($original,$user,0,8,8,8,256,"head_left", TRUE, FALSE);
+   minecraft_skin_3d_part($original,$user,0,8,8,8,256,"head_left", FALSE, FALSE);
    minecraft_skin_3d_part($original,$user,8,8,8,8,256,"head_front", FALSE, FALSE);
-   minecraft_skin_3d_part($original,$user,16,8,8,8,256,"head_right", TRUE, FALSE);
+   minecraft_skin_3d_part($original,$user,16,8,8,8,256,"head_right", FALSE, FALSE);
    minecraft_skin_3d_part($original,$user,24,8,8,8,256,"head_back", FALSE, FALSE);
 
    minecraft_skin_3d_part($original,$user,20,16,8,4,256,"body_top", FALSE, TRUE);
