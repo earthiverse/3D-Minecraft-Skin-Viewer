@@ -6,7 +6,7 @@ Add ?user=USERNAME to render a specific username
 Add &refresh to re-grab the skin and generate new parts
 -->
 <?php include('backend/backend.php');
-if(!isset($user)) $user = earthiverse;
+if(!isset($user)) $user = 'earthiverse';
 if(isset($refresh)) minecraft_skin_delete($user);
 minecraft_skin_download($user);?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
