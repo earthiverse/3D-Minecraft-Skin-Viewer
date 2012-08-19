@@ -121,35 +121,42 @@ function minecraft_skin_download($user) {
     {
         // Grab the Cape
         $providers = array(
-        		'http://minez-nightswatch.com/cape/{user}.png',
-        		'http://www.minecapes.net/players/hdcape/{user}.png',
+            'http://minez-nightswatch.com/cape/{user}.png',
+            'http://www.minecapes.net/players/hdcape/{user}.png',
+            'http://www.minecapes.net/players/{user}.png',
+            'http://www.mccapes.com/MinecraftCloaksssss/{user}.png',
+            'http://s3.amazonaws.com/MinecraftCloaks/{user}.png',
         );
         $ok = false;
         foreach($providers as $provider)
         {
-        	$url = str_replace('{user}',$user,$provider);
-        	if(@getimagesize($url))
-        	{
-        	    $ok = true;
-        		break;
-        	}
+            $url = str_replace('{user}',$user,$provider);
+            $size = @getimagesize($url);
+            $mult = 1; // Multiplier for HD Capes
+            if($size)
+            {
+                if($size[0] == 64) $mult = 1;
+                else $mult = $size[0] / 22;
+                $ok = true;
+                break;
+            }
         }
         if($ok)
         {
             // Download the cape from The Night's Watch
             file_put_contents($img,file_get_contents($url));
-            
+
             // Get the image
             $original = imagecreatefrompng($img);
-            
+
             // Generate the Cape Pieces
-            minecraft_skin_3d_part($original,$user,8,0,80,8,256,"cape_top", FALSE, FALSE);
-            minecraft_skin_3d_part($original,$user,88,0,80,8,256,"cape_bottom", FALSE, FALSE);
-            minecraft_skin_3d_part($original,$user,0,8,8,128,256,"cape_left", FALSE, FALSE);
-            minecraft_skin_3d_part($original,$user,88,8,8,128,256,"cape_right", FALSE, FALSE);
-            minecraft_skin_3d_part($original,$user,8,8,80,128,256,"cape_outward", FALSE, FALSE);
-            minecraft_skin_3d_part($original,$user,96,8,80,128,256,"cape_inward", FALSE, FALSE);
-            
+            minecraft_skin_3d_part($original,$user,1 * $mult,0,10 * $mult,1 * $mult,256,"cape_top", FALSE, FALSE);
+            minecraft_skin_3d_part($original,$user,11 * $mult,0,10 * $mult,1 * $mult,256,"cape_bottom", FALSE, FALSE);
+            minecraft_skin_3d_part($original,$user,0,1 * $mult,1 * $mult,16 * $mult,256,"cape_left", FALSE, FALSE);
+            minecraft_skin_3d_part($original,$user,11 * $mult,1 * $mult,1 * $mult,16 * $mult,256,"cape_right", FALSE, FALSE);
+            minecraft_skin_3d_part($original,$user,1 * $mult,1 * $mult,10 * $mult,16 * $mult,256,"cape_outward", FALSE, FALSE);
+            minecraft_skin_3d_part($original,$user,12 * $mult,1 * $mult,10 * $mult,16 * $mult,256,"cape_inward", FALSE, FALSE);
+
             // Release original from memory (Watch Cape)
             imagedestroy($original);
         }
