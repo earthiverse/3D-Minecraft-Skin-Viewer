@@ -21,11 +21,11 @@ minecraft_skin_download($user);?>
 <title>3d minecraft body test v1.0</title>
 </head>
 
-<body>
+<body onclick="console.log(xvar);">
 <script type="text/javascript">
  var camera, scene, renderer;
  init();
- setInterval( loop, 1000 / 60 );
+ rotate = setInterval( loop, 1000 / 60 );
  function init() {
   camera = new THREE.Camera(20, window.innerWidth / window.innerHeight, 1, 1000);
   scene = new THREE.Scene();
@@ -87,6 +87,15 @@ minecraft_skin_download($user);?>
   hat.position.z = 0;
   scene.addObject(hat);
 
+  var cape_materials = [new THREE.MeshBasicMaterial({map:ImageUtils.loadTexture('images/skins/<?php echo $user; ?>/cape_right.png')}),new THREE.MeshBasicMaterial({map:ImageUtils.loadTexture('images/skins/<?php echo $user; ?>/cape_left.png')}),new THREE.MeshBasicMaterial({map:ImageUtils.loadTexture('images/skins/<?php echo $user; ?>/cape_top.png')}),new THREE.MeshBasicMaterial({map:ImageUtils.loadTexture('images/skins/<?php echo $user; ?>/cape_bottom.png')}),new THREE.MeshBasicMaterial({map:ImageUtils.loadTexture('images/skins/<?php echo $user; ?>/cape_outward.png')}),new THREE.MeshBasicMaterial({map:ImageUtils.loadTexture('images/skins/<?php echo $user; ?>/cape_inward.png')})];
+
+  cape = new THREE.Mesh( new Cube(10, 16, 1, 1, 1, cape_materials), new THREE.MeshFaceMaterial());
+  cape.position.x = 0;
+  cape.position.y = -12;
+  cape.position.z = 5;
+  cape.rotation.x = -0.35;
+  scene.addObject(cape);
+  
   if(Detector.webgl) {
 	  renderer = new THREE.WebGLRenderer();
   } else {
