@@ -116,12 +116,25 @@ function minecraft_skin_download($user) {
         }
     } else return;
 
-    // Grab the Night's Watch Cape
     $img = 'images/skins/'.$user.'/cape.png';
-    $url = 'http://minez-nightswatch.com/cape/'.$user.'.png';
     if(!file_exists($img))
     {
-        if(@getimagesize($url))
+        // Grab the Cape
+        $providers = array(
+        		'http://minez-nightswatch.com/cape/{user}.png',
+        		'http://www.minecapes.net/players/hdcape/{user}.png',
+        );
+        $ok = false;
+        foreach($providers as $provider)
+        {
+        	$url = str_replace('{user}',$user,$provider);
+        	if(@getimagesize($url))
+        	{
+        	    $ok = true;
+        		break;
+        	}
+        }
+        if($ok)
         {
             // Download the cape from The Night's Watch
             file_put_contents($img,file_get_contents($url));
@@ -139,8 +152,8 @@ function minecraft_skin_download($user) {
             
             // Release original from memory (Watch Cape)
             imagedestroy($original);
-        } else die("Couldn't get Filesize");
-    } else die("File didn't exist.");
+        }
+    }
 }
 
 function minecraft_skin_delete($user) {
