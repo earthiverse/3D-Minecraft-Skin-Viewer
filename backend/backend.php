@@ -121,11 +121,12 @@ function minecraft_skin_download($user) {
     {
         // Grab the Cape
         $providers = array(
-            'http://minez-nightswatch.com/cape/{user}.png',
-            'http://www.minecapes.net/players/hdcape/{user}.png',
-            'http://www.minecapes.net/players/{user}.png',
-            'http://www.mccapes.com/MinecraftCloaksssss/{user}.png',
+            //    'http://minez-nightswatch.com/cape/{user}.png',
+            //    'http://www.minecapes.net/players/hdcape/{user}.png',
+            //    'http://www.minecapes.net/players/{user}.png',
+            //    'http://www.mccapes.com/MinecraftCloaksssss/{user}.png',
             'http://s3.amazonaws.com/MinecraftCloaks/{user}.png',
+            //    'http://optifine.net/capes/',
         );
         $ok = false;
         foreach($providers as $provider)
