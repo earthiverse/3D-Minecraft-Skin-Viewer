@@ -34,16 +34,12 @@ function FixHead2(context) {
 	// Front
 	if(HasTransparency(context, 40, 8, 8, 8)) return;
 	
-	console.log("Hi");
-	
 	// Top, Bottom, Right, Left, Back
 	if(HasTransparency(context, 40, 0, 8, 8)) return;
 	if(HasTransparency(context, 48, 0, 8, 8)) return;
 	if(HasTransparency(context, 32, 8, 8, 8)) return;
 	if(HasTransparency(context, 48, 8, 8, 8)) return;
 	if(HasTransparency(context, 56, 8, 8, 8)) return;
-	
-	console.log("Hi Again");
 	
 	// Didn't have transparency, clearing the head overlay area.
 	context.clearRect(40, 0, 8, 8);
