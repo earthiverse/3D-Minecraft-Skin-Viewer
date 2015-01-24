@@ -129,7 +129,7 @@ body {
 </div>
 <div id="info">
 	3D Skin Viewer v2 by <a href="https://github.com/earthiverse/3D-Minecraft-Skin-Viewer">earthiverse</a><br />
-	Skins downloaded from <a href="https://minotar.net/">Minotar</a>
+	Skins downloaded from <a href="https://crafatar.com/">Crafatar</a>
 </div>
 <script type="text/javascript">
 	var scene, camera, renderer;
@@ -193,8 +193,9 @@ body {
 		console.log("Failed loading " + img.src);
 	}
 	
-	// I use minotar because it allows CORS requests.
-	img.src = 'https://minotar.net/skin/earthiverse';
+	// I use crafatar because it allows CORS requests.
+	// Minotar stopped working.
+	img.src = 'http://crafatar.com/skins/earthiverse';
 	
 	function RenderSkin() {
 		// Head Parts
@@ -1005,7 +1006,7 @@ body {
 		var keyCode = e.keyCode || e.which;
 		if (keyCode == '13'){
 			// Enter pressed, set new image
-			img.src = 'https://minotar.net/skin/' + document.getElementById('username').value;
+			img.src = 'https://crafatar.com/skins/' + document.getElementById('username').value;
 		}
 	}
 </script>
