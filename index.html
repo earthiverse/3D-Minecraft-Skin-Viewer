@@ -93,6 +93,17 @@ body {
 	left: 86px;
 	position:absolute;
 	z-index:1;
+	/*To avoid canvas is too large*/
+	width:64px;
+}
+
+#canvas2 {
+	bottom:5px;
+	left: 155px;
+	position:absolute;
+	z-index:1;
+	/*To avoid canvas is too large*/
+	width:22px;
 }
 
 #info {
@@ -112,6 +123,7 @@ body {
 </style>
 <body>
 <canvas id="canvas" width="64" height="64"></canvas>
+<canvas id="canvas2" width="22" height="17"></canvas>
 <div id="sidebar">
 	<strong>Username</strong>
 	<input id="username" type="text" value="earthiverse">
@@ -123,6 +135,7 @@ body {
 	<label><input id="rightArmToggle" type="checkbox" checked>Right Arm</label>
 	<label><input id="leftLegToggle" type="checkbox" checked>Left Leg</label>
 	<label><input id="rightLegToggle" type="checkbox" checked>Right Leg</label>
+	<label><input id="capeToggle" type="checkbox" checked>Cape</label>
 	
 	<strong>Toggle Visibility - Secondary Layer</strong>
 	<label><input id="head2Toggle" type="checkbox" checked>Head</label>
@@ -131,6 +144,11 @@ body {
 	<label><input id="rightArm2Toggle" type="checkbox" checked>Right Arm</label>
 	<label><input id="leftLeg2Toggle" type="checkbox" checked>Left Leg</label>
 	<label><input id="rightLeg2Toggle" type="checkbox" checked>Right Leg</label>
+	
+	<strong>Other Option</strong>
+	<label><input id="allowFullScreenDragToggle" type="checkbox" checked>Allow Full Screen Drag</label>
+	<label><input id="playQuicklyToggle" type="checkbox">Play Quickly</label>
+	<label><input id="stopPlayToggle" type="checkbox">Stop Play</label>
 </div>
 <div id="model">
 </div>
@@ -140,20 +158,47 @@ body {
 </div>
 <script type="text/javascript">
 	var scene, camera, renderer;
-	var geometry, material, mesh;
+	var geometry, material, mesh, material3;
 	
 	var rightLeg2Box, leftLeg2Box;
 	
+	var capeLoaded=false;
+	var capeToggle = document.getElementById('capeToggle');
+	var cape;
+	
+	var deltaMouseX = 0;
+	var deltaMouseY = 0;
+	var originMouseX = 0;
+	var originMouseY = 0;
+	var isMouseDown = false;
+	var displayCanvas;
+	var allowFullScreenDrag=true;
+	var onMouseMove = function(e) {
+		if (isMouseDown) {
+			mouseX = e.pageX - displayCanvas.offsetLeft;
+			deltaMouseX = mouseX - originMouseX;
+			originMouseX = mouseX;
+			
+			mouseY = e.pageY - displayCanvas.offsetTop;
+			deltaMouseY = mouseY - originMouseY;
+			originMouseY = mouseY;
+		}
+	};
+	
+	var speed=1;
+	
 	var radius = 32;
-	var alpha = 0;
+	var alpha1 = 0; //For camera y rotation
+	var alpha2 = 0; //For camera x rotation
+	var alpha3 = 0; //For arms and legs y rotation (Swing)
 	
 	var sidebarWidth = 250;
 
 	camera = new THREE.PerspectiveCamera(75, (window.innerWidth - sidebarWidth) / window.innerHeight, 1, 10000);
-	camera.position.y = -12;
 	
 	scene = new THREE.Scene();
 	
+	//Skin Part
 	canvas = document.getElementById('canvas');
         canvas.width = 64;
         canvas.height = 64;
@@ -163,26 +208,41 @@ body {
 	skinTexture.magFilter = THREE.NearestFilter;
 	skinTexture.minFilter = THREE.NearestMipMapNearestFilter;
 	
+	//Cape Part
+	var canvas2 = document.getElementById('canvas2');
+	canvas2.width = 22;
+    canvas2.height = 17;
+    var context2 = canvas2.getContext("2d");
+	var capeTexture = new THREE.Texture(canvas2);
+	capeTexture.magFilter = THREE.NearestFilter;
+	capeTexture.minFilter = THREE.NearestMipMapNearestFilter;
+	
 	// Get the texture for the skin
 	material = new THREE.MeshBasicMaterial({map: skinTexture, side: THREE.FrontSide});
 	material2 = new THREE.MeshBasicMaterial({map: skinTexture, transparent: true, opacity: 1, alphaTest: 0.5, side: THREE.DoubleSide});
+	// Get the texture for the cape
+	material3 = new THREE.MeshBasicMaterial({map: capeTexture});
 	
 	var img = new Image();
 	img.crossOrigin = '';
 	var hasAnimate = false;
 	img.onload = function() {
-		console.log("Loaded Image");
+		console.log("Loaded Skin");
+		
+		//Change the size of canvas
+		canvas.width=img.width;
+		canvas.height=img.width;
 		
 		// Erase what was on the canvas before
-		context.clearRect(0, 0, 64, 64);
+		context.clearRect(0, 0, img.width, img.width);
 		
 		// Draw the image to the canvas
 		context.drawImage(img, 0, 0);
 		
 		// Convert the image if need be
-		if(img.height == 32) Convert6432To6464(context);
-		FixNonVisible(context);
-		FixOverlay(context);
+		if(img.height == img.width/2) Convert6432To6464(context,img.width/64);
+		FixNonVisible(context,img.width/64);
+		FixOverlay(context,img.width/64);
 		
 		skinTexture.needsUpdate = true;
 	
@@ -199,10 +259,49 @@ body {
 	img.onerror = function() {
 		console.log("Failed loading " + img.src);
 	}
+	var img2=new Image();
+	img2.crossOrigin = '';
+	img2.onload = function() {
+		if(img2.width/img2.height==2){
+			canvas2.width=img2.width/64*22;
+			canvas2.height=img2.height/32*17;
+		}else{
+			canvas2.width=img2.width;
+			canvas2.height=img2.width;
+		}
+		console.log("Loaded Cape");
+		
+		// Erase what was on the canvas before
+		context2.clearRect(0, 0, canvas2.width, canvas2.height);
+		
+		// Draw the image to the canvas
+		context2.drawImage(img2, 0, 0);
+		
+		capeTexture.needsUpdate = true;
+		material3.needsUpdate = true;
+		
+		capeLoaded=true;
+		if(!hasAnimate)
+		{
+			RenderSkin();
+			hasAnimate = true;
+			Animate();
+		}
+	}
+	img.onerror = function() {
+	capeLoaded=false;
+		console.log("Failed loading " + img.src);
+	}
 	
 	// I use crafatar because it allows CORS requests.
 	// Minotar stopped working.
 	img.src = 'http://crafatar.com/skins/earthiverse';
+	
+	//A very HD Skin which can be used for test
+	//img.src = 'http://www.skinme.cc:88/skins/404.png';
+	
+	//Cape test URL
+	img2.src = 'http://www.skinme.cc:88/cloaks/2129.png';
 	
 	function RenderSkin() {
 		// Head Parts
@@ -883,6 +982,63 @@ body {
 		leftLeg2Mesh.position.x = 2;
  		scene.add(leftLeg2Mesh);
 		
+		// Cape Parts
+		var capeTop = [
+			new THREE.Vector2(1/22, 21/17),
+			new THREE.Vector2(11/22, 21/17),
+			new THREE.Vector2(11/22, 22/17),
+			new THREE.Vector2(1/22, 22/17),
+		];
+		var capeBottom = [
+			new THREE.Vector2(11/22, 16/17),
+			new THREE.Vector2(21/22, 16/17),
+			new THREE.Vector2(21/22, 16/17),
+			new THREE.Vector2(11/22, 16/17)
+		];
+		var capeLeft = [
+			new THREE.Vector2(11/22, 0/17),
+			new THREE.Vector2(12/22, 0/17),
+			new THREE.Vector2(12/22, 16/17),
+			new THREE.Vector2(11/22, 16/17)
+		];
+		var capeFront = [
+			new THREE.Vector2(12/22, 0/17),
+			new THREE.Vector2(1, 0/17),
+			new THREE.Vector2(1, 16/17),
+			new THREE.Vector2(12/22, 16/17)
+		];
+		var capeRight = [
+			new THREE.Vector2(0, 0/17),
+			new THREE.Vector2(1/22, 0/17),
+			new THREE.Vector2(1/22, 16/17),
+			new THREE.Vector2(0, 16/17)
+		];
+		var capeBack = [
+			new THREE.Vector2(1/22, 0/17),
+			new THREE.Vector2(11/22, 0/17),
+			new THREE.Vector2(11/22, 16/17),
+			new THREE.Vector2(1/22, 16/17)
+		];
+		var capeBox = new THREE.BoxGeometry(10, 16, 1, 0, 0, 0);
+		capeBox.faceVertexUvs[0] = [];
+		capeBox.faceVertexUvs[0][0] = [capeRight[3], capeRight[0], capeRight[2]];
+		capeBox.faceVertexUvs[0][1] = [capeRight[0], capeRight[1], capeRight[2]];
+		capeBox.faceVertexUvs[0][2] = [capeLeft[3], capeLeft[0], capeLeft[2]];
+		capeBox.faceVertexUvs[0][3] = [capeLeft[0], capeLeft[1], capeLeft[2]];
+		capeBox.faceVertexUvs[0][4] = [capeTop[3], capeTop[0], capeTop[2]];
+		capeBox.faceVertexUvs[0][5] = [capeTop[0], capeTop[1], capeTop[2]];
+		capeBox.faceVertexUvs[0][6] = [capeBottom[0], capeBottom[3], capeBottom[1]];
+		capeBox.faceVertexUvs[0][7] = [capeBottom[3], capeBottom[2], capeBottom[1]];
+		capeBox.faceVertexUvs[0][8] = [capeFront[3], capeFront[0], capeFront[2]];
+		capeBox.faceVertexUvs[0][9] = [capeFront[0], capeFront[1], capeFront[2]];
+		capeBox.faceVertexUvs[0][10] = [capeBack[3], capeBack[0], capeBack[2]];
+		capeBox.faceVertexUvs[0][11] = [capeBack[0], capeBack[1], capeBack[2]];
+		capeMesh = new THREE.Mesh(capeBox, material3);
+		capeMesh.name = "cape";
+		capeMesh.position.x = 0;
+ 		scene.add(capeMesh);
+		cape = scene.getObjectByName("cape", false)
+		
 		// Add to page
 		container = document.getElementById('model');
 		
@@ -890,6 +1046,22 @@ body {
 		renderer.setSize(window.innerWidth - sidebarWidth, window.innerHeight);
 		
 		window.addEventListener('resize', onWindowResize, false);
+		
+		displayCanvas=renderer.domElement;
+		displayCanvas.addEventListener('mousedown', function(e) {
+			e.preventDefault();
+			originMouseX = e.pageX - displayCanvas.offsetLeft;
+			originMouseY = e.pageY - displayCanvas.offsetTop;
+			isMouseDown = true;
+		}, false);
+		window.addEventListener('mouseup', function(e) {
+			isMouseDown = false;
+		}, false);
+		window.addEventListener('mousemove', onMouseMove, false);
+		displayCanvas.addEventListener('mouseout', function(e) {
+			if(!allowFullScreenDrag)
+				isMouseDown = false;
+		}, false);
 
 		model.appendChild(renderer.domElement);
 	}
@@ -900,32 +1072,72 @@ body {
 
 	    renderer.setSize(window.innerWidth - sidebarWidth, window.innerHeight);
 	}
-	
+
 	function Animate() {
 		requestAnimationFrame(Animate);
 		
-		camera.rotation.y = alpha;
+		if(!capeLoaded){
+			cape.visible = false;
+		}else{
+			cape.visible = capeToggle.checked;
+		}
 		
-		//alpha = /*(Math.PI / 2)*/ + (Math.PI / 16);
-		alpha += Math.PI / 320;
-		camera.position.z = radius*Math.cos(alpha);
-		camera.position.x = radius*Math.sin(alpha);
+		if(!isMouseDown){
+			alpha1 += Math.PI / 360*speed;
+			
+			if(alpha2<0){
+				alpha2+=Math.PI / 360;
+				if(alpha2>0)
+					alpha2=0;
+			}else if(alpha2>0){
+				alpha2-=Math.PI / 360;
+				if(alpha2<0)
+					alpha2=0;
+			}
+		}else{
+			alpha1 += (-deltaMouseX/(window.innerWidth - sidebarWidth)/(radius*2)*1000);
+			deltaMouseX=0;
+			
+			alpha2+=deltaMouseY/window.innerHeight*5;
+			deltaMouseY=0;
+			if(alpha2>(Math.PI / 180*40)){
+				alpha2=Math.PI / 180*40;
+			}
+			if(alpha2<(-Math.PI / 180*30)){
+				alpha2=-Math.PI / 180*30;
+			}
+		}
+		
+		alpha3+=Math.PI / 180*0.5*speed;
+		
+		camera.position.y = radius*Math.sin(alpha2);
+		camera.position.z = radius*Math.cos(alpha1);
+		camera.position.x = radius*Math.sin(alpha1);
+		camera.position.setLength(30);
+		camera.lookAt(new THREE.Vector3(0, -12, 0));
 		
 		//Leg Swing
-		leftLeg2Mesh.rotation.x = leftLegMesh.rotation.x = Math.cos(alpha*4);
+		leftLeg2Mesh.rotation.x = leftLegMesh.rotation.x = Math.cos(alpha3*4);
 		leftLeg2Mesh.position.z = leftLegMesh.position.z = 0 - 6*Math.sin(leftLegMesh.rotation.x);
 		leftLeg2Mesh.position.y = leftLegMesh.position.y = -16 - 6*Math.abs(Math.cos(leftLegMesh.rotation.x));
-		rightLeg2Mesh.rotation.x = rightLegMesh.rotation.x = Math.cos(alpha*4 + (Math.PI));
+		rightLeg2Mesh.rotation.x = rightLegMesh.rotation.x = Math.cos(alpha3*4 + (Math.PI));
 		rightLeg2Mesh.position.z = rightLegMesh.position.z = 0 - 6*Math.sin(rightLegMesh.rotation.x);
 		rightLeg2Mesh.position.y = rightLegMesh.position.y = -16 - 6*Math.abs(Math.cos(rightLegMesh.rotation.x));
 		
 		//Arm Swing
-		leftArm2Mesh.rotation.x = leftArmMesh.rotation.x = Math.cos(alpha*4 + (Math.PI));
+		leftArm2Mesh.rotation.x = leftArmMesh.rotation.x = Math.cos(alpha3*4 + (Math.PI));
 		leftArm2Mesh.position.z = leftArmMesh.position.z = 0 - 6*Math.sin(leftArmMesh.rotation.x);
 		leftArm2Mesh.position.y = leftArmMesh.position.y = -4 - 6*Math.abs(Math.cos(leftArmMesh.rotation.x));
-		rightArm2Mesh.rotation.x = rightArmMesh.rotation.x = Math.cos(alpha*4);
+		rightArm2Mesh.rotation.x = rightArmMesh.rotation.x = Math.cos(alpha3*4);
 		rightArm2Mesh.position.z = rightArmMesh.position.z = 0 - 6*Math.sin(rightArmMesh.rotation.x);
 		rightArm2Mesh.position.y = rightArmMesh.position.y = -4 - 6*Math.abs(Math.cos(rightArmMesh.rotation.x));
+		
+		//Cape Swing
+		if(capeLoaded){
+			capeMesh.rotation.x = Math.abs(Math.cos(alpha3*2+(Math.PI/4))/4)+Math.PI / 180*10;
+			capeMesh.position.z = -2.2 - 8*Math.abs(Math.sin(capeMesh.rotation.x));
+			capeMesh.position.y = -4 - 8*Math.abs(Math.cos(capeMesh.rotation.x));
+		}
 		
 		renderer.render(scene, camera);
 	}
@@ -970,6 +1182,12 @@ body {
 		var rightLeg = scene.getObjectByName("rightLeg", false);
 		rightLeg.visible = rightLegToggle.checked;
 	}
+	capeToggle.addEventListener("change", capeChange, false);
+	function capeChange() {
+		if(capeLoaded){
+			cape.visible = capeToggle.checked;
+		}
+	}
 	head2Toggle = document.getElementById('head2Toggle');
 	head2Toggle.addEventListener("change", toggleHead2, false);
 	function toggleHead2() {
@@ -1006,6 +1224,18 @@ body {
 		var rightLeg2 = scene.getObjectByName("rightLeg2", false);
 		rightLeg2.visible = rightLeg2Toggle.checked;
 	}
+	allowFullScreenDragToggle = document.getElementById('allowFullScreenDragToggle');
+	allowFullScreenDragToggle.addEventListener("change", allowFullScreenDragChange, false);
+	function allowFullScreenDragChange() {
+		allowFullScreenDrag=allowFullScreenDragToggle.checked;
+	}
+	playQuicklyToggle = document.getElementById('playQuicklyToggle');
+	playQuicklyToggle.addEventListener("change", playQuickly, false);
+	function playQuickly() {
+		speed=stopPlayToggle.checked?0:playQuicklyToggle.checked?4:1;
+	}
+	stopPlayToggle = document.getElementById('stopPlayToggle');
+	stopPlayToggle.addEventListener("change", playQuickly, false);
 	
 	// Change the username
 	document.getElementById('username').onkeypress = function(e){
