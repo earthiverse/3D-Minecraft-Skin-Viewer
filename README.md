@@ -6,4 +6,4 @@ This project uses [three.js](https://github.com/mrdoob/three.js/) to render a 3d
 License
 -------
 
-GPLv3
+MIT
