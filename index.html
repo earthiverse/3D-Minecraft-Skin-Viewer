@@ -87,7 +87,9 @@ body {
 	position: absolute;
 	left: 250px;
 }
-
+#canvas-transparent {
+	display: none;
+}
 #canvas {
 	bottom:5px;
 	left: 86px;
@@ -111,8 +113,9 @@ body {
 }
 </style>
 <body>
-<canvas id="canvas" width="64" height="64"></canvas>
-<div id="sidebar">
+	<canvas id="canvas" width="64" height="64"></canvas>
+	<canvas id="canvas-transparent" width="64" height="64"></canvas>
+	<div id="sidebar">
 	<strong>Username</strong>
 	<input id="username" type="text" value="earthiverse">
 
@@ -154,18 +157,29 @@ body {
 	
 	scene = new THREE.Scene();
 	
-	canvas = document.getElementById('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        var context = canvas.getContext("2d");
+	// For opaque texture.
+	canvasOpaque = document.getElementById('canvas');
+	canvasOpaque.width = 64;
+	canvasOpaque.height = 64;
+	var contextOpaque = canvasOpaque.getContext("2d");
 	
-	var skinTexture = new THREE.Texture(canvas);
-	skinTexture.magFilter = THREE.NearestFilter;
-	skinTexture.minFilter = THREE.NearestMipMapNearestFilter;
+	// For transparent texture.
+	canvasTransparent = document.getElementById('canvas-transparent');
+	canvasTransparent.width = 64;
+	canvasTransparent.height = 64;
+	var contextTransparent = canvasTransparent.getContext("2d");
+	
+	var skinTextureOpaque = new THREE.Texture(canvas);
+	skinTextureOpaque.magFilter = THREE.NearestFilter;
+	skinTextureOpaque.minFilter = THREE.NearestMipMapNearestFilter;
+	
+	var skinTextureTransparent = new THREE.Texture(canvasTransparent);
+	skinTextureTransparent.magFilter = THREE.NearestFilter;
+	skinTextureTransparent.minFilter = THREE.NearestMipMapNearestFilter;
 	
 	// Get the texture for the skin
-	material = new THREE.MeshBasicMaterial({map: skinTexture, side: THREE.FrontSide});
-	material2 = new THREE.MeshBasicMaterial({map: skinTexture, transparent: true, opacity: 1, alphaTest: 0.5, side: THREE.DoubleSide});
+	material = new THREE.MeshBasicMaterial({map: skinTextureOpaque, transparent: false, side: THREE.FrontSide});
+	material2 = new THREE.MeshBasicMaterial({map: skinTextureTransparent, transparent: true, opacity: 1, alphaTest: 0.5, side: THREE.DoubleSide});
 	
 	var img = new Image();
 	img.crossOrigin = '';
@@ -174,18 +188,27 @@ body {
 		console.log("Loaded Image");
 		
 		// Erase what was on the canvas before
-		context.clearRect(0, 0, 64, 64);
-		
+		contextOpaque.clearRect(0, 0, 64, 64);
+		contextTransparent.clearRect(0, 0, 64, 64);
+
+		contextOpaque.fillStyle = "black";
+		contextOpaque.fillRect(0,0,64,64);
+
 		// Draw the image to the canvas
-		context.drawImage(img, 0, 0);
+		contextOpaque.drawImage(img, 0, 0);
+		contextTransparent.drawImage(img, 0, 0);
 		
 		// Convert the image if need be
-		if(img.height == 32) Convert6432To6464(context);
-		FixNonVisible(context);
-		FixOverlay(context);
+		if(img.height == 32) Convert6432To6464(contextOpaque);
+		if(img.height == 32) Convert6432To6464(contextTransparent);
+		FixNonVisible(contextOpaque);
+		FixOverlay(contextOpaque);
+		FixNonVisible(contextTransparent);
+		FixOverlay(contextTransparent);
 		
-		skinTexture.needsUpdate = true;
-	
+		skinTextureOpaque.needsUpdate = true;
+		skinTextureTransparent.needsUpdate = true;
+		
 		material.needsUpdate = true;
 		material2.needsUpdate = true;
 		
