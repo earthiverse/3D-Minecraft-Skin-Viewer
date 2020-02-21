@@ -202,7 +202,6 @@ body {
 	
 	// I use crafatar because it allows CORS requests.
 	// Minotar stopped working.
-	img.src = 'http://crafatar.com/skins/earthiverse';
 	
 	function RenderSkin() {
 		// Head Parts
@@ -1006,14 +1005,20 @@ body {
 		var rightLeg2 = scene.getObjectByName("rightLeg2", false);
 		rightLeg2.visible = rightLeg2Toggle.checked;
 	}
-	
+
+	function getJSON(url) {
+		return fetch(url).then(function(response) {
+			return response.json();
+		})
+	}
 	// Change the username
-	document.getElementById('username').onkeypress = function(e){
+	document.getElementById('username').onkeypress = async function(e){
 		if (!e) e = window.event;
 		var keyCode = e.keyCode || e.which;
 		if (keyCode == '13'){
 			// Enter pressed, set new image
-			img.src = 'https://crafatar.com/skins/' + document.getElementById('username').value;
+			var uid = await getJSON('https://cors-anywhere.herokuapp.com/https://api.mojang.com/users/profiles/minecraft/' + document.getElementById('username').value).then(function(response){return response.id});
+			img.src = 'https://crafatar.com/skins/' + uid;
 		}
 	}
 </script>
