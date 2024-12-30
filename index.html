@@ -37,7 +37,7 @@
 
 body {
 	background-image: url('images/bg_stone.png');
-	font-family: 'Lato', sans-serif;
+	font-family: 'MCFont', sans-serif;
 	font-size: 11px;
 }
 
@@ -83,10 +83,19 @@ body {
 }
 
 #model {
-	display: inline-block;
-	position: absolute;
-	left: 250px;
-}
+            display: inline-block;
+            position: absolute;
+            left: 250px;
+        }
+
+#name {
+    display: inline-block;
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%); 
+    font-size: 20px;
+        }
 
 #canvas {
 	bottom:5px;
@@ -108,6 +117,13 @@ body {
 #info a {
 	color: #FFFFFF;
 	font-weight:bold;
+}
+
+@font-face {
+    font-family: 'MCFont'; /* Name the font */
+    src: url('/Minecraft_font.ttf') format('truetype');
+    font-weight: normal; /* Define the weight of the font */
+    font-style: normal;  /* Define the style of the font */
 }
 </style>
 <body>
@@ -132,12 +148,15 @@ body {
 	<label><input id="leftLeg2Toggle" type="checkbox" checked>Left Leg</label>
 	<label><input id="rightLeg2Toggle" type="checkbox" checked>Right Leg</label>
 </div>
+<div id="name"><h1 id="namename"></h1></div>
 <div id="model">
 </div>
 <div id="info">
-	3D Skin Viewer v2 by <a href="https://github.com/earthiverse/3D-Minecraft-Skin-Viewer">earthiverse</a><br />
-	Skins downloaded from <a href="https://crafatar.com/">Crafatar</a>
+    3D Skin Viewer v2 by <a href="https://github.com/earthiverse/3D-Minecraft-Skin-Viewer">earthiverse</a><br />
+    Skins downloaded from <a href="https://crafatar.com/">Crafatar</a><br />
+    UUID fix by <a href="https://golden.is-a.dev">goldenboys2011</a>
 </div>
+
 <script type="text/javascript">
 	var scene, camera, renderer;
 	var geometry, material, mesh;
@@ -202,7 +221,7 @@ body {
 	
 	// I use crafatar because it allows CORS requests.
 	// Minotar stopped working.
-	img.src = 'http://crafatar.com/skins/earthiverse';
+	//img.src = 'http://crafatar.com/skins/earthiverse';
 	
 	function RenderSkin() {
 		// Head Parts
@@ -1013,6 +1032,34 @@ body {
 		var keyCode = e.keyCode || e.which;
 		if (keyCode == '13'){
 			// Enter pressed, set new image
+			async function getUUID(username) {
+            	const proxyUrl = 'https://corsproxy.io/?';
+            	const targetUrl = `https://api.mojang.com/users/profiles/minecraft/${username}`;
+            	const url = proxyUrl + targetUrl;
+            	try {
+                	const response = await fetch(url);
+                	if (!response.ok) {
+                    	throw new Error(`HTTP error! status: ${response.status}`);
+                	}
+                	const data = await response.json();
+                	return data.id;
+            	} catch (error) {
+                	console.error('Error fetching UUID:', error);
+                	return null;
+            	}
+        	}
+
+            const USERNAME = document.getElementById("username").value;
+            getUUID(USERNAME).then(uuid => {
+                if (uuid) {
+					img.src = 'https://crafatar.com/skins/' + uuid;
+					const user = document.getElementById('username').value;
+					document.getElementById('name').innerHTML = `<h1>${user}</h1>`;
+                } else {
+                    img.src = 'https://crafatar.com/skins/60e832db-feb7-45e2-b92f-e82e5132bf03';
+					document.getElementById('name').innerHTML = `<h1>Error-Username Not Found</h1>`;
+                }
+            });
 			img.src = 'https://crafatar.com/skins/' + document.getElementById('username').value;
 		}
 	}

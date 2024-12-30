@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft User to UUID</title>
+    <script>
+        async function getUUID(username) {
+            const proxyUrl = 'https://corsproxy.io/?';
+            const targetUrl = `https://api.mojang.com/users/profiles/minecraft/${username}`;
+            const url = proxyUrl + targetUrl;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.id;
+            } catch (error) {
+                console.error('Error fetching UUID:', error);
+                return null;
+            }
+        }
+
+        function run() {
+            const USERNAME = document.getElementById("name").value;
+            getUUID(USERNAME).then(uuid => {
+                const uuidElement = document.getElementById("UUID");
+                if (uuid) {
+                    uuidElement.textContent = `UUID for ${USERNAME} is: ${uuid}`;
+                } else {
+                    uuidElement.textContent = 'Username not found or an error occurred.';
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Mc User To UUID</h1>
+    <input id="name" type="text" placeholder="Enter Minecraft username">
+    <button onclick="run()">Get UUID</button>
+    <br>
+    <h3 id="UUID">UUID</h3>
+</body>
+</html>
